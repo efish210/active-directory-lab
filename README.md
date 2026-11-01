@@ -1,7 +1,7 @@
 # active-directory-lab
 Built a two VM Active Directory environment from scratch in VirtualBox: a Windows Server 2016 domain controller running AD DS and DNS for a new forest ('epf.com'), and a Windows 10 Pro workstation joined to that domain. Configured the private network and static addressing, verified connectivity in both directions, created and tested a domain user, and automated security group creation with Powershell.
 
-**Skills demonstrated:** VirtualBox networking · static IPv4/DNS configuration · network troubleshooting (ipconfig,ping) · AD DS/DNS role installation · domain join · Active Directory Users and Computers (ADUC) · user and security group administratrion ·Powershell ActiveDirectory module · rerunnable scripting
+**Skills demonstrated:** VirtualBox networking · static IPv4/DNS configuration · network troubleshooting (ipconfig,ping) · AD DS/DNS role installation · domain join · Active Directory Users and Computers (ADUC) · user and security group administratrion · Powershell ActiveDirectory module · rerunnable scripting
 ### Environment
 | Role | OS | vCPU | RAM | IP | Notes |
 | :-| :-| :-| :-| :-| :-|
@@ -18,10 +18,11 @@ Windows 10 client (2 GB) · Windows Server 2016 (8 GB) · Host with both VMs run
 ![Server 2016 VM resources](screenshots/01-server2016-vm-resources.png)
 ![Host resources](screenshots/02-host-resources-both-vms-running.png)
 </details>
+
 ---
 
 ### What I did 
-### 1. Put both VMs on the same private network with static addresing
+### 1. Put both VMs on the same private network with static addressing
 Assigned the server static address of `10.1.1.10/24` and pointed its preferred DNS at itself (`10.1.1.10`), since it would become the DNS server for the domain. Gave the client `10.1.1.20/24`.
 ![DC static IPv4 config](screenshots/03-dc-static-ipv4-config.png)
 | Domain controller | Client |

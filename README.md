@@ -1,7 +1,7 @@
 # active-directory-lab
-Built a two VM Active Directory environment from scratch in VirtualBox: a Windows Server 2016 domain controller running AD DS and DNS for a new forest (`epf.com`), and a Windows 10 Pro workstation joined to that domain. Configured the private network and static addressing, verified connectivity in both directions, created and tested a domain user, and automated security group creation with Powershell.
+Built a two VM Active Directory environment from scratch in VirtualBox: a Windows Server 2016 domain controller running AD DS and DNS for a new forest (`epf.com`), and a Windows 10 Pro workstation joined to that domain. Configured the private network and static addressing, verified connectivity in both directions, created and tested a domain user, and automated security group creation with PowerShell.
 
-**Skills demonstrated:** VirtualBox networking · static IPv4/DNS configuration · network troubleshooting (ipconfig,ping) · AD DS/DNS role installation · domain join · Active Directory Users and Computers (ADUC) · user and security group administration · PowerShell ActiveDirectory module · rerunnable scripting
+**Skills demonstrated:** VirtualBox networking · static IPv4/DNS configuration · network troubleshooting (ipconfig, ping) · AD DS/DNS role installation · domain join · Active Directory Users and Computers (ADUC) · user and security group administration · PowerShell ActiveDirectory module · rerunnable scripting · APIPA/DHCP troubleshooting
 ## Environment
 
 | Role | OS | vCPU | RAM | IP | Notes |
@@ -13,9 +13,7 @@ Built a two VM Active Directory environment from scratch in VirtualBox: a Window
 Hypervisor: Oracle VirtualBox. Both VMs sit on a VirtualBox internal/private network so they can talk to each other without touching the host LAN.
 <details>
   
-<summary>
-  
-VMs and host resource screenshots</summary>
+<summary>VMs and host resource screenshots</summary>
 
 Windows 10 client (2 GB) · Windows Server 2016 (8 GB) · Host with both VMs running
   
@@ -29,7 +27,7 @@ Windows 10 client (2 GB) · Windows Server 2016 (8 GB) · Host with both VMs run
 ## What I did 
 
 ### 1. Put both VMs on the same private network with static addressing
-Assigned the server static address of `10.1.1.10/24` and pointed its preferred DNS at itself (`10.1.1.10`), since it would become the DNS server for the domain. Gave the client `10.1.1.20/24`.
+Assigned the server static address of `10.1.1.10/24` and pointed its preferred DNS at itself (`10.1.1.10`), since it would become the DNS server for the domain.
 ![DC static IPv4 config](screenshots/03-dc-static-ipv4-config.png)
 | Domain controller | Client |
 | :- | :- |
@@ -39,7 +37,7 @@ Assigned the server static address of `10.1.1.10/24` and pointed its preferred D
 
 **Symptom:** The first ping from the client to the DC (`10.1.1.10`) timed out with 100% packet loss.
 
-**Diagnosis:** `ipconfig` on the client showed `Autoconfiguration IPv4 Address: 169.254.83.98` with a `255.255.0.0` mask. That's an APIPA address, that Windows assigns itself when the adapter is set to obtain an IP automatically but no DHCP server answers. The VirtualBox internal network has no DHCP server, so the client was on `169.254.0.0/16` while the DC was on `10.1.1.0/24`. With two different machines on different networks, the ping had no route.
+**Diagnosis:** `ipconfig` on the client showed `Autoconfiguration IPv4 Address: 169.254.83.98` with a `255.255.0.0` mask. That's an APIPA address, which Windows assigns itself when the adapter is set to obtain an IP automatically but no DHCP server answers. The VirtualBox internal network has no DHCP server, so the client was on `169.254.0.0/16` while the DC was on `10.1.1.0/24`. With the two machines on different networks, the ping had no route.
 
 **Fix:** Assigned the client a static address of `10.1.1.20/24` and set its preferred DNS server to the DC (`10.1.1.10`). DNS has to point at the DC so the client can find `epf.com` domain later when joining it.
 
@@ -67,12 +65,13 @@ Back on the DC, the workstation's computer object now appears in the **Computers
 
 ### 5. Create a domain user and log in with it
 Created a user `Test Account` (logon `test@epf.com`) in ADUC, then signed in to the Windows 10 client with that domain account. The Accounts page in Settings shows the session running as `EPF\Test`, and the network flyout shows the machine on the `epf.com` network.
+
 | New user in ADUC | Logged in on the client |
 | :- | :- |
 | ![New user](screenshots/11-aduc-new-user-test-account.png) | ![Logged in](screenshots/12-client-logged-in-as-domain-user.png) |
 
 ### 6. Automate security group creation with PowerShell
-Wrote `scripts/New-ADGroups.ps1` to create five global security groups (`IT`, `HR`, `Executive`, `OPS`, `Billing`) in the domain's Users container and then list them for verification. The script doesn't use a hardcoded domain, it resolves the domain DN with `(Get-ADDomain).DistinguishedName`, so it works unchanged in any domain. Each group is created only if `Get-ADGroup -LDAPFilter "(name=$g)"` finds nothing in the target container, so rerunning the script is safe and doesn't error out on duplicates.
+Wrote [`scripts/New-ADGroups.ps1`](scripts/New-ADGroups.ps1) to create five global security groups (`IT`, `HR`, `Executive`, `OPS`, `Billing`) in the domain's Users container and then list them for verification. The script doesn't use a hardcoded domain, it resolves the domain DN with `(Get-ADDomain).DistinguishedName`, so it works unchanged in any domain. Each group is created only if `Get-ADGroup -LDAPFilter "(name=$g)"` finds nothing in the target container, so rerunning the script is safe and doesn't error out on duplicates.
 
 ```powershell
 foreach ($g in $groups) {

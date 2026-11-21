@@ -28,10 +28,7 @@ Windows 10 client (2 GB) · Windows Server 2016 (8 GB) · Host with both VMs run
 
 ### 1. Put both VMs on the same private network with static addressing
 Assigned the server static address of `10.1.1.10/24` and pointed its preferred DNS at itself (`10.1.1.10`), since it would become the DNS server for the domain.
-![DC static IPv4 config](screenshots/03-dc-static-ipv4-config.png)
-| Domain controller | Client |
-| :- | :- |
-| ![DC ipconfig](screenshots/04-dc-ipconfig-before-after.png) | ![Client ipconfig](screenshots/05-client-ipconfig-before-after.png) |
+![DC ipconfig](screenshots/04-dc-ipconfig-before-after.png)
 
 ### 2. Troubleshoot client-to-DC connectivity
 
@@ -39,7 +36,7 @@ Assigned the server static address of `10.1.1.10/24` and pointed its preferred D
 
 **Diagnosis:** `ipconfig` on the client showed `Autoconfiguration IPv4 Address: 169.254.83.98` with a `255.255.0.0` mask. That's an APIPA address, which Windows assigns itself when the adapter is set to obtain an IP automatically but no DHCP server answers. The VirtualBox internal network has no DHCP server, so the client was on `169.254.0.0/16` while the DC was on `10.1.1.0/24`. With the two machines on different networks, the ping had no route.
 
-**Fix:** Assigned the client a static address of `10.1.1.20/24` and set its preferred DNS server to the DC (`10.1.1.10`). DNS has to point at the DC so the client can find `epf.com` domain later when joining it.
+**Fix:** Assigned the client a static address of `10.1.1.20/24` and set its preferred DNS server to the DC (`10.1.1.10`). DNS has to point at the DC so the client can find the `epf.com` domain later when joining it.
 
 **Verification:** The same ping succeeded with 0% loss and ~1ms round trip time. I also pinged the client from the DC to confirm traffic flows in both directions.
 
